@@ -1,7 +1,11 @@
+const dotenv = require("dotenv");
+dotenv.config();
 const { app, BrowserWindow } = require("electron");
 const { Menu, globalShortcut } = require("electron/main");
 let mainWindow;
+let aboutWindow;
 
+console.log(process.env.DEV);
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -9,6 +13,18 @@ const createWindow = () => {
   });
 
   mainWindow.loadFile("./app/index.html");
+};
+const createAboutWindow = () => {
+  aboutWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    title: "About ImageShrink",
+    icon: "./assets/icons/Icon_256x256.png",
+    resizable: false,
+    backgroundColor: "white",
+  });
+
+  mainWindow.loadFile("./app/about.html");
 };
 
 app.whenReady().then(() => {
