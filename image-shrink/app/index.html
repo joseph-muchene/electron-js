@@ -9,9 +9,84 @@
       content="script-src 'self' 'unsafe-inline' "
     />
     <title>Image shrink</title>
+    <!-- css config -->
+    <link rel="stylesheet" href="css/all.min.css" />
+    <link rel="stylesheet" href="css/materialize.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <h1>hello world</h1>
-    <h1>reload</h1>
+    <div class="container center-align">
+      <h3>
+        <i class="fas fa-images"></i>
+        ImageShrink
+      </h3>
+      <p>Choose an image to resize</p>
+      <form action="" id="image-form">
+        <div class="file-field input-field">
+          <div class="btn">
+            <span>Browse</span>
+            <input type="file" name="" id="img" />
+          </div>
+
+          <div class="file-path-wrapper">
+            <input
+              type="text"
+              name=""
+              placeholder="Upload file"
+              id=""
+              class="file-path-validate"
+            />
+          </div>
+        </div>
+        <p>
+          <strong>Quality:</strong>
+          <em>The lower the quality the smaller the file size</em>
+        </p>
+        <p class="range-field">
+          <input type="range" min="0" max="100" id="slider" />
+        </p>
+        <input type="submit" value="resize" class="btn black" />
+      </form>
+
+      <div class="card output">
+        <div class="card-content">
+          Output Path: <span id="output-path"></span>
+        </div>
+      </div>
+    </div>
+    <script src="./js/materialize.min.js"></script>
+
+    <!-- renderer -->
+
+    <script>
+      const path = require("path");
+      const os = require("os");
+      const { ipcRenderer } = require("electron");
+      // checks the current directory
+      // console.log(os.homedir());
+
+      const form = document.getElementById("image-form");
+      const slider = document.getElementById("slider");
+      const img = document.getElementById("img");
+      document.getElementById("output-path").innerText = path.join(
+        os.homedir(),
+        "imageshrink"
+      );
+
+      // submit event
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const imgPath = img.files[0].path;
+        const quality = slider.value;
+
+        // console.log(imgPath, quality);
+
+        // send the imgPath and quality to the main process
+        ipcRenderer.send("image:minimize", {
+          imgPath,
+          quality,
+        });
+      });
+    </script>
   </body>
 </html>

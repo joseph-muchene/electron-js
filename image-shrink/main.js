@@ -1,7 +1,7 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const { app, BrowserWindow } = require("electron");
-const { Menu, globalShortcut } = require("electron/main");
+const { Menu, globalShortcut, ipcMain } = require("electron/main");
 let mainWindow;
 let aboutWindow;
 
@@ -10,8 +10,16 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    icon: "./assets/icon/Icon_256x256.png",
+    backgroundColor: "white",
+    // ability to use node on renderer script
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
   });
-
+  // open devtools automatically on development mode
+  mainWindow.webContents.openDevTools();
   mainWindow.loadFile("./app/index.html");
 };
 const createAboutWindow = () => {
@@ -24,11 +32,16 @@ const createAboutWindow = () => {
     backgroundColor: "white",
   });
 
-  mainWindow.loadFile("./app/about.html");
+  aboutWindow.loadFile("./app/about.html");
 };
 
+// receive data on the main process
+ipcMain.on("image:minimize", (e, options) => {
+  console.log(options);
+});
 app.whenReady().then(() => {
   createWindow();
+  // createAboutWindow();
 
   //   creating our own menu
   const menu = [
@@ -41,6 +54,16 @@ app.whenReady().then(() => {
           accelerator:
             process.platform === "darwin" ? "Command + w" : "Ctrl + w",
           click: () => app.quit(),
+        },
+      ],
+    },
+    {
+      label: app.name,
+      submenu: [
+        {
+          label: "About",
+          //   add shortcut to menu
+          click: createAboutWindow,
         },
       ],
     },
