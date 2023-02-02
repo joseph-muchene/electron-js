@@ -1,11 +1,21 @@
+const path = require("path");
+const os = require("os");
 const dotenv = require("dotenv");
+const imageMin = require("imagemin");
+// allows access to folder
+const { shell } = require("electron");
+const imageMinMozJpeg = require("imagemin-mozjpeg");
+const imageMinQuant = require("imagemin-pngquant");
+const slash = require("slash");
 dotenv.config();
+
+// show logs package
+const log = require("electron-log");
 const { app, BrowserWindow } = require("electron");
 const { Menu, globalShortcut, ipcMain } = require("electron/main");
 let mainWindow;
 let aboutWindow;
 
-console.log(process.env.DEV);
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -37,8 +47,34 @@ const createAboutWindow = () => {
 
 // receive data on the main process
 ipcMain.on("image:minimize", (e, options) => {
-  console.log(options);
+  options.dest = path.join(os.homedir(), "imageshrink");
+
+  shrinkImage(options);
 });
+
+// handle shrink image
+async function shrinkImage({ imgPath, quality, dest }) {
+  try {
+    const pngQuality = quality / 100;
+    const files = await imageMin([slash(imgPath)], {
+      destination: dest,
+      plugins: [
+        imageMinMozJpeg({ quality }),
+        imageMinQuant({
+          quality: [pngQuality, pngQuality],
+        }),
+      ],
+    });
+    log.info(files);
+    shell.openPath(dest);
+
+    // send to the renderer (main process to the renderer)
+    mainWindow.webContents.send("image:done");
+  } catch (err) {
+    log.error(err);
+  }
+}
+
 app.whenReady().then(() => {
   createWindow();
   // createAboutWindow();
